@@ -1,4 +1,4 @@
-export const isTest = true
+export const isTest = false
 
 export const testDefinitions = `Yes|tick-v yes|#38A169|test_yes
 No|tick-x no|#EA3323|test_no
