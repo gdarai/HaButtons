@@ -17,19 +17,39 @@ body {
   margin: 0;
 }
 
-button {
+button,
+input {
   font: inherit;
 }
 
-.page {
-  display: grid;
-  min-height: 100vh;
-  padding: 24px;
-  place-items: center;
+button {
+  cursor: pointer;
 }
 
-.card {
-  width: min(100%, 440px);
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #03a9f4;
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.page {
+  min-height: 100vh;
+  padding: clamp(16px, 4vw, 40px);
+}
+
+.panel,
+.buttons-panel {
+  width: min(100%, 960px);
+  margin: 0 auto;
+}
+
+.panel {
+  max-width: 460px;
   padding: 32px;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
@@ -57,50 +77,124 @@ h1 {
   line-height: 1.5;
 }
 
-.toggle {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 56px;
-  padding: 12px 16px;
-  border: 1px solid #bdbdbd;
-  border-radius: 8px;
-  color: #212121;
-  background: #fff;
-  cursor: pointer;
-  text-align: left;
+fieldset {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
-.toggle:hover {
-  background: #e1f5fe;
-}
-
-.toggle:focus-visible {
-  outline: 3px solid #03a9f4;
-  outline-offset: 3px;
-}
-
-.toggle[aria-pressed="true"] {
-  border-color: #0288d1;
-  background: #e1f5fe;
-}
-
-.toggle-icon {
-  color: #03a9f4;
-  font-size: 1.4rem;
-  line-height: 1;
-}
-
-.toggle-state {
-  margin-left: auto;
-  color: #0277bd;
+label {
+  margin-top: 8px;
   font-weight: 600;
 }
 
-.hint {
-  margin: 16px 0 0;
-  color: #616161;
-  font-size: 0.875rem;
-  line-height: 1.5;
+input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #9e9e9e;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #0277bd;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.primary-button {
+  margin-top: 16px;
+  color: #fff;
+  background: #0277bd;
+}
+
+.secondary-button {
+  color: #0277bd;
+  background: #fff;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #015c91;
+}
+
+.secondary-button:hover {
+  background: #e1f5fe;
+}
+
+.error {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #c62828;
+  border-radius: 6px;
+  color: #8e1515;
+  background: #fff3f3;
+  overflow-wrap: anywhere;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.grid-scroll {
+  overflow-x: auto;
+  padding: 3px;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(116px, 1fr));
+  gap: 16px;
+}
+
+.command-button {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: #212121;
+  background: transparent;
+  text-align: center;
+}
+
+.icon-tile {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1.6;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.command-button:hover:not(:disabled) .icon-tile {
+  filter: brightness(0.9);
+}
+
+.button-name {
+  width: 100%;
+  min-height: 2.5em;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: 24px;
+  }
+
+  .button-grid {
+    gap: 12px;
+  }
 }
