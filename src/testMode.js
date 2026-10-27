@@ -1,5 +1,3 @@
-export const isTest = false
-
 export const testDefinitions = `Yes|tick-v yes|#38A169|test_yes
 No|tick-x no|#EA3323|test_no
 Lights on|lit bulb|#F6C453|lights_on

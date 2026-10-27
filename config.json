@@ -1,0 +1,6 @@
+{
+  "URL": "http://192.168.0.210:8123",
+  "PATH": "local/ButtonsFile.txt",
+  "COLUMNS": 2,
+  "TEST": false
+}

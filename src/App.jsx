@@ -1,19 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { baseUrl, definitionsUrl, iconColor, parseDefinitions, readSettings, saveSettings, validateColumns, webhookUrl } from './definitions.js'
+import { iconColor, parseDefinitions } from './definitions.js'
 import { Icon } from './icons.js'
-import { isTest, testDefinitions } from './testMode.js'
+import { testDefinitions } from './testMode.js'
 
-async function loadButtons(settings, signal) {
-  baseUrl(settings.host)
-  validateColumns(settings.columns)
-  if (isTest) return parseDefinitions(testDefinitions)
-
-  const url = definitionsUrl(settings.host, settings.path)
+async function loadResponse(url, signal) {
   const response = await fetch(url, { signal })
   if (!response.ok) {
-    throw new Error(`Could not load definitions: HTTP ${response.status}.`)
+    throw new Error(`Could not load ${url}: HTTP ${response.status}.`)
   }
-  return parseDefinitions(await response.text())
+  return response
 }
 
 function errorMessage(error) {
@@ -21,14 +16,13 @@ function errorMessage(error) {
 }
 
 function App() {
-  const [form, setForm] = useState({ host: '', path: '', columns: '2' })
   const [settings, setSettings] = useState(null)
   const [buttons, setButtons] = useState([])
   const [screen, setScreen] = useState('loading')
-  const [submitting, setSubmitting] = useState(false)
-  const [configError, setConfigError] = useState('')
+  const [loadError, setLoadError] = useState('')
   const [actionError, setActionError] = useState('')
   const [pending, setPending] = useState([])
+  const [retry, setRetry] = useState(0)
   const requestId = useRef(0)
 
   useEffect(() => {
@@ -37,18 +31,22 @@ function App() {
     let active = true
     async function initialize() {
       try {
-        const saved = readSettings()
+        const options = await (await loadResponse('/api/settings', controller.signal)).json()
+        if (!Number.isSafeInteger(options.columns) || options.columns < 1 || typeof options.test !== 'boolean') {
+          throw new Error('Invalid settings from the local server.')
+        }
+        const definitions = options.test
+          ? testDefinitions
+          : await (await loadResponse('/api/definitions', controller.signal)).text()
+        const loaded = parseDefinitions(definitions)
         if (!active || id !== requestId.current) return
-        setForm(saved)
-        const loaded = await loadButtons(saved, controller.signal)
-        if (!active || id !== requestId.current) return
-        setSettings(saved)
+        setSettings(options)
         setButtons(loaded)
         setScreen('buttons')
       } catch (error) {
         if (!active || id !== requestId.current || controller.signal.aborted) return
-        setConfigError(errorMessage(error))
-        setScreen('config')
+        setLoadError(errorMessage(error))
+        setScreen('error')
       }
     }
     initialize()
@@ -56,43 +54,14 @@ function App() {
       active = false
       controller.abort()
     }
-  }, [])
-
-  function openConfig() {
-    requestId.current++
-    setConfigError('')
-    setScreen('config')
-  }
-
-  async function submit(event) {
-    event.preventDefault()
-    const next = {
-      host: form.host.trim(),
-      path: form.path.trim(),
-      columns: form.columns.trim(),
-    }
-    setSubmitting(true)
-    setConfigError('')
-    try {
-      saveSettings(next)
-      const loaded = await loadButtons(next)
-      setSettings(next)
-      setButtons(loaded)
-      setActionError('')
-      setScreen('buttons')
-    } catch (error) {
-      setConfigError(errorMessage(error))
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  }, [retry])
 
   async function pressButton(button, index) {
     setPending((current) => [...current, index])
     setActionError('')
     try {
-      const url = webhookUrl(settings.host, button.command)
-      if (isTest) {
+      const url = `/api/webhook/${encodeURIComponent(button.command)}`
+      if (settings.test) {
         console.info(`POST ${url}`)
       } else {
         const response = await fetch(url, { method: 'POST' })
@@ -113,55 +82,17 @@ function App() {
         <section className="panel" aria-live="polite">
           <h1>HaButtons</h1>
           <p>Loading buttons...</p>
-          <button type="button" className="secondary-button" onClick={openConfig}>Config</button>
         </section>
       )}
 
-      {screen === 'config' && (
-        <section className="panel config-panel" aria-labelledby="config-title">
-          <p className="eyebrow">HaButtons</p>
-          <h1 id="config-title">Config</h1>
-          <p className="description">Set the Home Assistant address and button definitions file.</p>
-          <form onSubmit={submit}>
-            <fieldset disabled={submitting}>
-              <label htmlFor="host">URL (IP:PORT)</label>
-              <input
-                id="host"
-                name="host"
-                type="text"
-                placeholder="192.168.1.100:8123"
-                autoComplete="url"
-                value={form.host}
-                onChange={(event) => setForm((current) => ({ ...current, host: event.target.value }))}
-                required
-              />
-              <label htmlFor="path">PATH</label>
-              <input
-                id="path"
-                name="path"
-                type="text"
-                placeholder="src/definitions.txt"
-                value={form.path}
-                onChange={(event) => setForm((current) => ({ ...current, path: event.target.value }))}
-                required={!isTest}
-              />
-              <label htmlFor="columns">Columns</label>
-              <input
-                id="columns"
-                name="columns"
-                type="number"
-                min="1"
-                step="1"
-                value={form.columns}
-                onChange={(event) => setForm((current) => ({ ...current, columns: event.target.value }))}
-                required
-              />
-              {configError && <p className="error" role="alert">{configError}</p>}
-              <button type="submit" className="primary-button">
-                {submitting ? 'Loading...' : 'Submit'}
-              </button>
-            </fieldset>
-          </form>
+      {screen === 'error' && (
+        <section className="panel" aria-live="polite">
+          <h1>HaButtons</h1>
+          <p className="error" role="alert">{loadError}</p>
+          <button type="button" className="secondary-button" onClick={() => {
+            setScreen('loading')
+            setRetry((current) => current + 1)
+          }}>Retry</button>
         </section>
       )}
 
@@ -169,11 +100,10 @@ function App() {
         <section className="buttons-panel" aria-labelledby="buttons-title">
           <header className="toolbar">
             <h1 id="buttons-title">HaButtons</h1>
-            <button type="button" className="secondary-button" onClick={openConfig}>Config</button>
           </header>
           {actionError && <p className="error" role="alert">{actionError}</p>}
           <div className="grid-scroll">
-            <div className="button-grid" style={{ '--columns': validateColumns(settings.columns) }}>
+            <div className="button-grid" style={{ '--columns': settings.columns }}>
               {buttons.map((button, index) => (
                 <button
                   type="button"
