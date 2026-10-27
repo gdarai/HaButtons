@@ -54,6 +54,36 @@ const icons = {
     ['path', { d: 'M12 6v8m0 4h.01' }],
     ['circle', { cx: 12, cy: 12, r: 10 }],
   ],
+  circle: [
+    ['circle', { cx: 12, cy: 12, r: 9 }],
+  ],
+  'circle full': [
+    ['circle', { cx: 12, cy: 12, r: 9, fill: 'currentColor' }],
+  ],
+  square: [
+    ['rect', { x: 3, y: 3, width: 18, height: 18 }],
+  ],
+  'square full': [
+    ['rect', { x: 3, y: 3, width: 18, height: 18, fill: 'currentColor' }],
+  ],
+  triangle: [
+    ['path', { d: 'M12 3l9 18H3z' }],
+  ],
+  'triangle full': [
+    ['path', { d: 'M12 3l9 18H3z', fill: 'currentColor' }],
+  ],
+  'square 1/4 full': [
+    ['rect', { x: 3, y: 3, width: 18, height: 18 }],
+    ['rect', { x: 3, y: 16.5, width: 18, height: 4.5, fill: 'currentColor', stroke: 'none' }],
+  ],
+  'square 1/2 full': [
+    ['rect', { x: 3, y: 3, width: 18, height: 18 }],
+    ['rect', { x: 3, y: 12, width: 18, height: 9, fill: 'currentColor', stroke: 'none' }],
+  ],
+  'square 3/4 full': [
+    ['rect', { x: 3, y: 3, width: 18, height: 18 }],
+    ['rect', { x: 3, y: 7.5, width: 18, height: 13.5, fill: 'currentColor', stroke: 'none' }],
+  ],
 }
 
 export function Icon({ name }) {
